@@ -163,10 +163,26 @@ export default function App() {
   };
 
   const handleDownload = () => {
+    const detailedAssignments = Object.entries(assignments).map(([ballId, signal]) => {
+      const hardwareName = PIN_HARDWARE_MAP[ballId] || "";
+      const validGpios = VALID_MUX_MAP[signal] || [];
+      // Determine which GPIO is being used based on the hardware map
+      const usedGpio = validGpios.find(gpio => hardwareName.includes(gpio)) || "N/A";
+      
+      return {
+        ball_id: ballId,
+        signal_name: signal,
+        gpio_pin: usedGpio,
+        hardware_label: hardwareName
+      };
+    });
+
     const exportData = {
+      device: "TMS320F28388D ZWT",
       timestamp: new Date().toISOString(),
-      assignments: assignments
+      configuration: detailedAssignments
     };
+    
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
