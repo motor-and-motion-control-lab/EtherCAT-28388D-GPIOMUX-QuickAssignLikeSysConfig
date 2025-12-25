@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TMS320F28388D EtherCAT Configurator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @keyframes stripes {
+        0% { background-position: 0 0; }
+        100% { background-position: 8px 8px; }
+      }
+      .bg-stripes-gray {
+        background-image: repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 4px,
+          rgba(0, 0, 0, 0.1) 4px,
+          rgba(0, 0, 0, 0.1) 8px
+        );
+        background-size: 8px 8px;
+        animation: stripes 1s linear infinite;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/main.jsx"></script>
+  </body>
+</html>
+
