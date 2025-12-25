@@ -1,0 +1,193 @@
+If you want to reproduce this exact visualization interface using Gemini 3 from scratch, you need to provide a very specific and structured prompt. The key is to supply all the necessary data (Pin Map, Valid Mux Map, Color Schemes) explicitly within the prompt, rather than asking the model to "look it up" or "infer it," which can lead to inconsistencies.
+
+
+
+Here is the exact prompt you should use. It contains all the hard-earned corrections and data structures we developed.
+
+
+
+---
+
+
+
+### Prompt for Gemini 3
+
+
+
+**Goal:** Create a single-file React application (`App.jsx`) that visualizes the EtherCAT GPIO configuration for the **TMS320F28388D ZWT (337-Ball BGA)** package.
+
+
+
+**Core Features Required:**
+
+
+
+1. **Visual BGA Grid:** Display the 19x19 BGA grid (Rows W-A, Cols 1-19).
+
+* **Row Order:** Top is Row 'W', Bottom is Row 'A'.
+
+* **Col Order:** Left is '1', Right is '19'.
+
+* **Cell Content:** Display the hardware pin name inside each ball. If the name is long, use tiny text; if short, use normal text.
+
+* **Alignment:** Ensure column numbers (1-19) strictly align with the grid columns.
+
+
+
+
+
+2. **Sidebar with Signal Groups:**
+
+* **Groups:** "EtherCAT Port 0", "EtherCAT Port 1", "Common / Management", "LED Indicators".
+
+* **Signals:** List specific EtherCAT signals under each group (e.g., `ESC_TX0_CLK`, `ESC_LED_RUN`).
+
+* **Group Selection:** Clicking a Group Header (e.g., "EtherCAT Port 1") should enter "Group Mode", highlighting *all* potential pins for *all* signals in that group with 50% opacity.
+
+* **Signal Selection:** Clicking a specific Signal (e.g., "TX0_CLK") should enter "Config Mode" for that signal only.
+
+
+
+
+
+3. **Interactive Configuration Logic:**
+
+* **Group Mode Interaction:** If a group is selected, clicking a highlighted "candidate" pin should automatically assign it to the correct signal within that group. If the pin is already assigned to that signal, unassign it.
+
+* **Single Mode Interaction:** If a single signal is selected, clicking a valid pin assigns/unassigns it.
+
+* **Validation:** Only allow assignment if the pin supports the specific EtherCAT function (based on the `VALID_MUX_MAP` provided below).
+
+* **Exclusivity:** A pin can only hold one signal. Assigning a new signal overwrites the old one.
+
+* **Power Pin Protection:** Prevent selecting pins labeled VDD, VSS, VREF, X1, X2. Show a "Ban" icon on hover.
+
+
+
+
+
+4. **Presets:** Include a "Recommended: East/South Fanout" button that auto-populates a specific optimal mapping.
+
+5. **Styling:** Use Tailwind CSS.
+
+* **Port 0:** Blue theme.
+
+* **Port 1:** Orange theme.
+
+* **Common:** Emerald theme.
+
+* **LEDs:** Purple theme.
+
+
+
+
+
+
+
+**Crucial Data Structures (Must be used exactly as provided):**
+
+
+
+**1. PIN_HARDWARE_MAP (The Physical Pinout):**
+
+Use this specific JSON object for mapping Ball IDs to Hardware Names. Do not infer; use this exact data.
+
+
+
+```json
+
+{
+
+"W1": "VSSA", "W2": "ADCINB1, DACOUTC", "W3": "ADCINB3, CMPIN3N", "W4": "ADCINB5", "W5": "VREFHIB", "W6": "VREFLOD", "W7": "VSS", "W8": "VDDIO", "W9": "GPIO128", "W10": "GPIO116", "W11": "GPIO29", "W12": "FLT1", "W13": "TDI", "W14": "TMS", "W15": "TDO", "W16": "GPIO121", "W17": "GPIO39", "W18": "GPIO132", "W19": "VSS",
+
+"V1": "VREFHIA", "V2": "ADCINB0, VDAC", "V3": "ADCINB2, CMPIN3P", "V4": "ADCINB4", "V5": "VREFHID", "V6": "VREFLOB", "V7": "VSSA", "V8": "GPIO124", "V9": "GPIO127", "V10": "GPIO131", "V11": "GPIO28", "V12": "GPIO115", "V13": "FLT2", "V14": "TRSTn", "V15": "TCK", "V16": "GPIO36", "V17": "GPIO40", "V18": "GPIO134", "V19": "VDDIO",
+
+"U1": "ADCINA0, DACOUTA", "U2": "ADCINA2, CMPIN1P", "U3": "ADCINA4, CMPIN2P", "U4": "ADCIN15, CMPIN4N", "U5": "ADCIND1, CMPIN7N", "U6": "ADCIND3, CMPIN8N", "U7": "ADCIND5", "U8": "GPIO123", "U9": "GPIO126", "U10": "GPIO130", "U11": "GPIO31", "U12": "GPIO117", "U13": "GPIO32", "U14": "GPIO34", "U15": "GPIO120", "U16": "GPIO37", "U17": "GPIO41", "U18": "GPIO135", "U19": "ERRORSTS",
+
+"T1": "ADCINA1, DACOUTB", "T2": "ADCINA3, CMPIN1N", "T3": "ADCINA5, CMPIN2N", "T4": "ADCIN14, CMPIN4P", "T5": "ADCIND0, CMPIN7P", "T6": "ADCIND2, CMPIN8P", "T7": "ADCIND4", "T8": "GPIO122", "T9": "GPIO125", "T10": "GPIO129", "T11": "GPIO30", "T12": "GPIO118", "T13": "GPIO33", "T14": "GPIO35", "T15": "GPIO119", "T16": "GPIO38", "T17": "GPIO136", "T18": "GPIO137", "T19": "GPIO138",
+
+"R1": "VREFHIC", "R2": "VREFLOA", "R3": "ADCINC2, CMPIN6P", "R4": "ADCINC4, CMPIN5P", "R5": "VSSA", "R6": "VDDA", "R7": "VSS", "R8": "VSS", "R9": "VDDIO", "R10": "VDD", "R11": "VDD3VFL", "R12": "VDD3VFL", "R13": "VDD", "R14": "VSS", "R15": "VSS", "R16": "GPIO48", "R17": "GPIO49", "R18": "GPIO50", "R19": "GPIO51",
+
+"P1": "VSSA", "P2": "VREFLOC", "P3": "ADCINC3, CMPIN6N", "P4": "ADCINC5, CMPIN5N", "P5": "VSSA", "P6": "VDDA", "P7": "VSS", "P8": "VSS", "P9": "VDDIO", "P10": "VDD", "P11": "VSS", "P12": "VSS", "P13": "VDD", "P14": "VSS", "P15": "VSS", "P16": "GPIO52", "P17": "GPIO53", "P18": "GPIO54", "P19": "GPIO55",
+
+"N1": "VSS", "N2": "GPIO109", "N3": "GPIO114", "N4": "GPIO113", "N5": "VSS", "N6": "VSS", "N14": "VDDIO", "N15": "VDDIO", "N16": "GPIO56", "N17": "GPIO58", "N18": "GPIO57", "N19": "GPIO139",
+
+"M1": "VDDIO", "M2": "GPIO110", "M3": "GPIO112", "M4": "GPIO111", "M5": "VDDIO", "M6": "VDDIO", "M8": "VSS", "M9": "VSS", "M10": "VSS", "M11": "VSS", "M12": "VSS", "M14": "VSS", "M15": "VSS", "M16": "GPIO59", "M17": "GPIO60", "M18": "GPIO141", "M19": "GPIO140",
+
+"L1": "GPIO27", "L2": "GPIO106", "L3": "GPIO107", "L4": "GPIO108", "L5": "VSS", "L6": "VSS", "L8": "VSS", "L9": "VSS", "L10": "VSS", "L11": "VSS", "L12": "VSS", "L14": "VDDIO", "L15": "VDDIO", "L16": "GPIO61", "L17": "GPIO64", "L18": "VSS", "L19": "GPIO142",
+
+"K1": "GPIO26", "K2": "GPIO25", "K3": "GPIO24", "K4": "GPIO23", "K5": "VDD", "K6": "VDD", "K8": "VSS", "K9": "VSS", "K10": "VSS", "K11": "VSS", "K12": "VSS", "K14": "VSS", "K15": "VSS", "K16": "GPIO65", "K17": "GPIO66", "K18": "GPIO44", "K19": "GPIO45",
+
+"J1": "GPIO103", "J2": "GPIO104", "J3": "GPIO105", "J4": "GPIO22", "J5": "VSS", "J6": "VSS", "J8": "VSS", "J9": "VSS", "J10": "VSS", "J11": "VSS", "J12": "VSS", "J14": "VDD", "J15": "VDD", "J16": "GPIO63", "J17": "GPIO62", "J18": "NC", "J19": "X2",
+
+"H1": "GPIO100", "H2": "GPIO101", "H3": "GPIO102", "H4": "NC", "H5": "VDDIO", "H6": "VDDIO", "H8": "VSS", "H9": "VSS", "H10": "VSS", "H11": "VSS", "H12": "VSS", "H14": "VSS", "H15": "VSS", "H16": "VDDOSC", "H17": "VDDOSC", "H18": "VSSOSC", "H19": "VSSOSC",
+
+"G1": "GPIO99", "G2": "GPIO8", "G3": "GPIO9", "G4": "VDDIO", "G5": "VDDIO", "G6": "VDDIO", "G14": "VDD", "G15": "VDD", "G16": "VSS", "G17": "VSS", "G18": "GPIO133", "G19": "X1",
+
+"F1": "GPIO98", "F2": "GPIO20", "F3": "GPIO21", "F4": "VDDIO", "F5": "VSS", "F6": "VSS", "F7": "VDDIO", "F8": "VSS", "F9": "VDD", "F10": "VDDIO", "F11": 'VDD', "F12": 'VSS', "F13": "VDDIO", "F14": "VSS", "F15": "VSS", "F16": "VDDIO", "F17": "GPIO144", "F18": "GPIO143", "F19": "XRSn",
+
+"E1": "GPIO16", "E2": "GPIO17", "E3": "GPIO18", "E4": "GPIO19", "E5": "VSS", "E6": "VSS", "E7": "VDDIO", "E8": "VSS", "E9": "VDD", "E10": "VDDIO", "E11": "VDD", "E12": "VSS", "E13": "VDDIO", "E14": "VSS", "E15": "VSS", "E16": "VDDIO", "E17": "GPIO145", "E18": "GPIO47", "E19": "GPIO46",
+
+"D1": "GPIO13", "D2": "GPIO14", "D3": "GPIO15", "D4": "GPIO168", "D5": "GPIO166", "D6": "GPIO89", "D7": "GPIO5", "D8": "GPIO1", "D9": "GPIO162", "D10": "GPIO159", "D11": "GPIO87", "D12": "GPIO156", "D13": "GPIO152", "D14": "GPIO148", "D15": "GPIO80", "D16": "GPIO75", "D17": "GPIO147", "D18": "GPIO146", "D19": "GPIO42",
+
+"C1": "GPIO11", "C2": "GPIO12", "C3": "GPIO96", "C4": "GPIO167", "C5": "GPIO165", "C6": 'GPIO88', "C7": 'GPIO4', "C8": 'GPIO0', "C9": 'GPIO161', "C10": 'GPIO158', "C11": 'GPIO86', "C12": 'GPIO155', "C13": 'GPIO151', "C14": 'GPIO83', "C15": 'GPIO79', "C16": 'GPIO76', "C17": 'GPIO74', "C18": 'GPIO68', "C19": 'GPIO43',
+
+"B1": "VDDIO", "B2": "GPIO10", "B3": "GPIO95", "B4": "GPIO93", "B5": "GPIO91", "B6": "GPIO7", "B7": "GPIO3", "B8": "GPIO164", "B9": "GPIO160", "B10": "GPIO157", "B11": "GPIO85", "B12": "GPIO154", "B13": "GPIO150", "B14": "GPIO82", "B15": "GPIO78", "B16": "GPIO72", "B17": "GPIO71", "B18": "GPIO69", "B19": "GPIO67",
+
+"A1": "VSS", "A2": "GPIO97", "A3": "GPIO94", "A4": "GPIO92", "A5": "GPIO90", "A6": "GPIO6", "A7": "GPIO2", "A8": "GPIO163", "A9": "VDDIO", "A10": "VSS", "A11": "GPIO84", "A12": "GPIO153", "A13": "GPIO149", "A14": "GPIO81", "A15": "GPIO77", "A16": "GPIO73", "A17": "GPIO70", "A18": "VDDIO", "A19": "VSS"
+
+}
+
+
+
+```
+
+
+
+**2. VALID_MUX_MAP (The Signal Logic):**
+
+Map EtherCAT signals to valid GPIO strings.
+
+
+
+```json
+
+{
+
+"ESC_TX0_CLK": ["GPIO85", "GPIO157"], "ESC_TX0_ENA": ["GPIO84", "GPIO156"], "ESC_TX0_DATA0": ["GPIO87", "GPIO158"], "ESC_TX0_DATA1": ["GPIO88", "GPIO159"], "ESC_TX0_DATA2": ["GPIO89", "GPIO160"], "ESC_TX0_DATA3": ["GPIO90", "GPIO161"], "ESC_RX0_CLK": ["GPIO77", "GPIO163"], "ESC_RX0_DV": ["GPIO78", "GPIO162"], "ESC_RX0_DATA0": ["GPIO80", "GPIO165"], "ESC_RX0_DATA1": ["GPIO81", "GPIO166"], "ESC_RX0_DATA2": ["GPIO82", "GPIO167"], "ESC_RX0_DATA3": ["GPIO83", "GPIO168"], "ESC_RX0_ERR": ["GPIO79", "GPIO164"], "ESC_PHY0_LINKSTATUS": ["GPIO86", "GPIO148"],
+
+"ESC_TX1_CLK": ["GPIO44", "GPIO130"], "ESC_TX1_ENA": ["GPIO45", "GPIO129"], "ESC_TX1_DATA0": ["GPIO75", "GPIO131"], "ESC_TX1_DATA1": ["GPIO74", "GPIO132"], "ESC_TX1_DATA2": ["GPIO73", "GPIO134"], "ESC_TX1_DATA3": ["GPIO72", "GPIO135"], "ESC_RX1_CLK": ["GPIO69", "GPIO137"], "ESC_RX1_DV": ["GPIO70", "GPIO136"], "ESC_RX1_DATA0": ["GPIO63", "GPIO139"], "ESC_RX1_DATA1": ["GPIO64", "GPIO140"], "ESC_RX1_DATA2": ["GPIO65", "GPIO141"], "ESC_RX1_DATA3": ["GPIO66", "GPIO142"], "ESC_RX1_ERR": ["GPIO71", "GPIO138"], "ESC_PHY1_LINKSTATUS": ["GPIO68", "GPIO149"],
+
+"ESC_MDIO_CLK": ["GPIO26", "GPIO46", "GPIO152"], "ESC_MDIO_DATA": ["GPIO27", "GPIO47", "GPIO153"], "ESC_PHY_RESETn": ["GPIO76", "GPIO155"], "ESC_PHY_CLK": ["GPIO48", "GPIO154"], "ESC_I2C_SDA": ["GPIO29", "GPIO40", "GPIO150"], "ESC_I2C_SCL": ["GPIO30", "GPIO41", "GPIO151"], "ESC_LED_RUN": ["GPIO61", "GPIO146"], "ESC_LED_ERR": ["GPIO60", "GPIO145"], "ESC_LED_LINK0_ACTIVE": ["GPIO58", "GPIO143"], "ESC_LED_LINK1_ACTIVE": ["GPIO59", "GPIO144"]
+
+}
+
+
+
+```
+
+
+
+**3. PRESET_EAST_SOUTH (The Recommended Layout):**
+
+
+
+```json
+
+{
+
+"B11": "ESC_TX0_CLK", "A11": "ESC_TX0_ENA", "D11": "ESC_TX0_DATA0", "D10": "ESC_TX0_DATA1", "B9": "ESC_TX0_DATA2", "C9": "ESC_TX0_DATA3", "A15": "ESC_RX0_CLK", "B15": "ESC_RX0_DV", "D15": "ESC_RX0_DATA0", "A14": "ESC_RX0_DATA1", "B14": "ESC_RX0_DATA2", "C14": "ESC_RX0_DATA3", "C15": "ESC_RX0_ERR", "D14": "ESC_PHY0_LINKSTATUS",
+
+"K18": "ESC_TX1_CLK", "K19": "ESC_TX1_ENA", "D16": "ESC_TX1_DATA0", "C17": "ESC_TX1_DATA1", "A16": "ESC_TX1_DATA2", "B16": "ESC_TX1_DATA3", "B18": "ESC_RX1_CLK", "A17": "ESC_RX1_DV", "J16": "ESC_RX1_DATA0", "L17": "ESC_RX1_DATA1", "K16": "ESC_RX1_DATA2", "K17": "ESC_RX1_DATA3", "B17": "ESC_RX1_ERR", "C18": "ESC_PHY1_LINKSTATUS",
+
+"E19": "ESC_MDIO_CLK", "E18": "ESC_MDIO_DATA", "C16": "ESC_PHY_RESETn", "R16": "ESC_PHY_CLK", "B13": "ESC_I2C_SDA", "C13": "ESC_I2C_SCL", "L16": "ESC_LED_RUN", "M17": "ESC_LED_ERR", "F18": "ESC_LED_LINK0_ACTIVE", "F17": "ESC_LED_LINK1_ACTIVE"
+
+}
+
+
+
+```
+
+
+
+**Generate the code now.**
